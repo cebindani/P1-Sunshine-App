@@ -1,5 +1,6 @@
 package com.example.android.sunshine.app;
 
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -98,19 +99,42 @@ public class ForecastFragment extends Fragment {
         }
 
         private String OpenWeatherAPIConnection() throws IOException {
+
             String forecastJsonStr = null;
 
+            HttpURLConnection connection = null;
+
+            String postcode = "94043";
+            String units = "metric";
+            int numDays = 7;
+            String responseFormat = "json";
             String APPID = BuildConfig.OPEN_WEATHER_MAP_API_KEY;
 
-            HttpURLConnection connection = null;
             try {
-                URL url = new URL("http://api.openweathermap.org/data/2.5/forecast/daily?q=94043,US&units=metric&cnt=7&mode=json&APPID=" + APPID);
+                final String FORECAST_BASE_URL = "http://api.openweathermap.org/data/2.5/forecast";
+                final String PATH = "daily";
+                final String QUERY_PARAM = "q";
+                final String UNITS_PARAM = "units";
+                final String DAYS_PARAM = "cnt";
+                final String FORMAT_PARAM = "mode";
+                final String APPID_PARAM = "APPID";
+                Uri uriBuilder = Uri.parse(FORECAST_BASE_URL).buildUpon()
+                        .appendPath(PATH)
+                        .appendQueryParameter(QUERY_PARAM, postcode)
+                        .appendQueryParameter(UNITS_PARAM, units)
+                        .appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
+                        .appendQueryParameter(FORMAT_PARAM, responseFormat)
+                        .appendQueryParameter(APPID_PARAM, APPID)
+                        .build();
+
+                URL url = new URL(uriBuilder.toString());
+                Log.d(LOG_TAG, "URL: " + url);
 
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 connection.connect();
                 int responseCode = connection.getResponseCode();
-                Log.d(LOG_TAG, "Response code: " + responseCode);
+                Log.v(LOG_TAG, "Response code: " + responseCode);
 
 
                 InputStream inputStream = connection.getInputStream();
@@ -130,7 +154,7 @@ public class ForecastFragment extends Fragment {
 //                    }
 
                     forecastJsonStr = buffer.toString();
-                    Log.d(LOG_TAG, forecastJsonStr);
+                    Log.v(LOG_TAG, "Forecast JSON string: " + forecastJsonStr);
                     reader.close();
                 }
 
