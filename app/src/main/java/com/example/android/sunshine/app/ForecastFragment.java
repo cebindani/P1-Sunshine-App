@@ -14,13 +14,20 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.TimeZone;
 
 public class ForecastFragment extends Fragment {
 
@@ -72,60 +79,55 @@ public class ForecastFragment extends Fragment {
         ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
         listView.setAdapter(forecastArrayAdapter);
 
-        new FetchWeatherTask().execute();
+        new FetchWeatherTask().execute("94043");
 
         return rootView;
 
     }
 
-    public class FetchWeatherTask extends AsyncTask<Void, Void, String> {
+    public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
 
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
+        private int numDays = 7;
 
         @Override
-        protected String doInBackground(Void... params) {
+        protected String[] doInBackground(String... params) {
+
+            if (params.length == 0) {
+                return null;
+            }
+            String locationPostcode = params[0];
+            String forecastJsonStr;
+            forecastJsonStr = OpenWeatherAPIConnection(locationPostcode);
 
             try {
-                return OpenWeatherAPIConnection();
-            } catch (IOException e) {
-                return "Unable to retrieve data";
+                return getWeatherDataFromJson(forecastJsonStr, numDays);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                Log.e(LOG_TAG, e.getMessage());
             }
+            return null;
 
         }
 
         @Override
-        protected void onPostExecute(String s) {
+        protected void onPostExecute(String[] s) {
+
+
             super.onPostExecute(s);
+
+
         }
 
-        private String OpenWeatherAPIConnection() throws IOException {
+        private String OpenWeatherAPIConnection(String locationPostcode) {
 
             String forecastJsonStr = null;
 
             HttpURLConnection connection = null;
 
-            String postcode = "94043";
-            String units = "metric";
-            int numDays = 7;
-            String responseFormat = "json";
-            String APPID = BuildConfig.OPEN_WEATHER_MAP_API_KEY;
-
             try {
-                final String FORECAST_BASE_URL = "http://api.openweathermap.org/data/2.5/forecast";
-                final String PATH = "daily";
-                final String QUERY_PARAM = "q";
-                final String UNITS_PARAM = "units";
-                final String DAYS_PARAM = "cnt";
-                final String FORMAT_PARAM = "mode";
-                final String APPID_PARAM = "APPID";
-                Uri uriBuilder = Uri.parse(FORECAST_BASE_URL).buildUpon()
-                        .appendPath(PATH)
-                        .appendQueryParameter(QUERY_PARAM, postcode)
-                        .appendQueryParameter(UNITS_PARAM, units)
-                        .appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
-                        .appendQueryParameter(FORMAT_PARAM, responseFormat)
-                        .appendQueryParameter(APPID_PARAM, APPID)
-                        .build();
+                Uri uriBuilder = buildURL(locationPostcode);
 
                 URL url = new URL(uriBuilder.toString());
                 Log.d(LOG_TAG, "URL: " + url);
@@ -169,6 +171,78 @@ public class ForecastFragment extends Fragment {
             }
             return forecastJsonStr;
         }
+
+        private Uri buildURL(String postcode) {
+
+            String units = "metric";
+            String responseFormat = "json";
+            String APPID = BuildConfig.OPEN_WEATHER_MAP_API_KEY;
+            final String FORECAST_BASE_URL = "http://api.openweathermap.org/data/2.5/forecast";
+            final String PATH = "daily";
+            final String QUERY_PARAM = "q";
+            final String UNITS_PARAM = "units";
+            final String DAYS_PARAM = "cnt";
+            final String FORMAT_PARAM = "mode";
+            final String APPID_PARAM = "APPID";
+
+            return Uri.parse(FORECAST_BASE_URL).buildUpon()
+                    .appendPath(PATH)
+                    .appendQueryParameter(QUERY_PARAM, postcode)
+                    .appendQueryParameter(UNITS_PARAM, units)
+                    .appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
+                    .appendQueryParameter(FORMAT_PARAM, responseFormat)
+                    .appendQueryParameter(APPID_PARAM, APPID)
+                    .build();
+        }
+
+
+        private String[] getWeatherDataFromJson(String forecastJsonStr, int numDays) throws JSONException {
+            JSONObject jsonObject = new JSONObject(forecastJsonStr);
+            JSONArray weatherList = jsonObject.getJSONArray("list");
+
+//        List<WeatherData> mWeatherDataList = new ArrayList<>();
+
+            String[] dailyForecastsInPeriod = new String[numDays];
+
+            for (int i = 0; i < weatherList.length(); i++) {
+//            WeatherData weatherData = new WeatherData();
+                long dateTime;
+                String day;
+                String description;
+                double maxTemp;
+                double minTemp;
+                JSONObject dayForecastObject = weatherList.getJSONObject(i);
+                dateTime = dayForecastObject.getLong("dt");
+
+                day = getReadableDateString(dateTime);
+                JSONObject weatherObject = dayForecastObject.getJSONArray("weather").getJSONObject(0);
+                description = weatherObject.getString("main");
+
+                JSONObject temperatureObject = dayForecastObject.getJSONObject("temp");
+                maxTemp = temperatureObject.getDouble("max");
+                minTemp = temperatureObject.getDouble("min");
+
+                dailyForecastsInPeriod[i] = day + " - " + description + " " + Math.round(maxTemp) + "/" + Math.round(minTemp);
+
+            }
+
+            for (String s :
+                    dailyForecastsInPeriod) {
+                Log.v(LOG_TAG, "Forecast entry: " + s);
+            }
+            return dailyForecastsInPeriod;
+
+
+        }
+
+        private String getReadableDateString(long dateTime) {
+            Date date = new Date(dateTime * 1000);
+            SimpleDateFormat format = new SimpleDateFormat("EEE MMM dd");
+            format.setTimeZone(TimeZone.getDefault());
+
+            return format.format(dateTime);
+        }
+
     }
 
 }
