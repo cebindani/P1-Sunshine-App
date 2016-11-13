@@ -31,7 +31,7 @@ import java.util.TimeZone;
 
 public class ForecastFragment extends Fragment {
 
-    ArrayAdapter forecastArrayAdapter;
+    private ArrayAdapter mForecastAdapter;
 
     public ForecastFragment() {
     }
@@ -70,14 +70,14 @@ public class ForecastFragment extends Fragment {
         forecastArrayList.add("Thu 3/11 - Cloudy 30º/21º");
         forecastArrayList.add("Fri 4/11 - Cloudy 24º/10º ");
 
-        forecastArrayAdapter = new ArrayAdapter(
+        mForecastAdapter = new ArrayAdapter<String>(
                 getActivity(),
                 R.layout.list_item_forecast,
                 R.id.list_item_forecast_textview,
                 forecastArrayList);
 
         ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
-        listView.setAdapter(forecastArrayAdapter);
+        listView.setAdapter(mForecastAdapter);
 
         new FetchWeatherTask().execute("94043");
 
@@ -112,10 +112,17 @@ public class ForecastFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(String[] s) {
+        protected void onPostExecute(String[] result) {
 
+            if (result != null) {
+                mForecastAdapter.clear();
+                for (String dayForecastStr :
+                        result) {
+                    mForecastAdapter.add(dayForecastStr);
+                }
 
-            super.onPostExecute(s);
+            }
+            super.onPostExecute(result);
 
 
         }
@@ -225,11 +232,7 @@ public class ForecastFragment extends Fragment {
                 dailyForecastsInPeriod[i] = day + " - " + description + " " + Math.round(maxTemp) + "/" + Math.round(minTemp);
 
             }
-
-            for (String s :
-                    dailyForecastsInPeriod) {
-                Log.v(LOG_TAG, "Forecast entry: " + s);
-            }
+            
             return dailyForecastsInPeriod;
 
 
@@ -240,7 +243,7 @@ public class ForecastFragment extends Fragment {
             SimpleDateFormat format = new SimpleDateFormat("EEE MMM dd");
             format.setTimeZone(TimeZone.getDefault());
 
-            return format.format(dateTime);
+            return format.format(date);
         }
 
     }
