@@ -8,5 +8,6 @@
     <string name="update_menu">Update</string>
     <string name="action_refresh">Update</string>
     <string name="title_activity_detail">Detail</string>
+    <string name="title_activity_settings">Settings</string>
 
 </resources>
