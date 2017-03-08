@@ -7,5 +7,6 @@
     <string name="item_forecast_text">Today - Sunny - 32º/23º</string>
     <string name="update_menu">Update</string>
     <string name="action_refresh">Update</string>
+    <string name="title_activity_detail">Detail</string>
 
 </resources>
