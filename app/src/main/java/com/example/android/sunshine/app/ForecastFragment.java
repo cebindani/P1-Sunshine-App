@@ -67,7 +67,9 @@ public class ForecastFragment extends Fragment {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String locationPreferences = preferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
         Log.d("location", "locationPreferences:  " + locationPreferences);
-        new FetchWeatherTask().execute(locationPreferences);
+        if (!locationPreferences.isEmpty()) {
+            new FetchWeatherTask().execute(locationPreferences);
+        }
     }
 
     @Override
@@ -265,7 +267,7 @@ public class ForecastFragment extends Fragment {
             if (unitType.equals(getString(R.string.pref_units_imperial))) {
                 maxTemp = (maxTemp * 1.8) + 32;
                 minTemp = (minTemp * 1.8) + 32;
-            } else if (!unitType.equals(getString(R.string.pref_units_metric))){
+            } else if (!unitType.equals(getString(R.string.pref_units_metric))) {
                 Log.d(LOG_TAG, "Unit type not found: " + unitType);
             }
 

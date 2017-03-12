@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sunshine</string>
+    <string name="pref_location_label">Local</string>
+    <string name="pref_units_label">Unidades de Temperatura</string>
+    <string name="pref_units_label_imperial">Farenheit (ºF)</string>
+    <string name="pref_units_label_metric">Celsius (ºC)</string>
+    <string name="update_menu">Atualizar</string>
+    <string name="title_activity_settings">Configurações</string>
+    <string name="title_activity_detail">Detalhes</string>
+    <string name="action_refresh">Atualizar</string>
+    <string name="action_settings">Configurações</string>
+    <string name="action_map">Abrir no mapa</string>
+</resources>
