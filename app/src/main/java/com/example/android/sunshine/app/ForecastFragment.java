@@ -31,6 +31,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 public class ForecastFragment extends Fragment {
@@ -246,7 +247,11 @@ public class ForecastFragment extends Fragment {
                 maxTemp = temperatureObject.getDouble("max");
                 minTemp = temperatureObject.getDouble("min");
 
-                dailyForecastsInPeriod[i] = day + " - " + description + " " + Math.round(maxTemp) + "/" + Math.round(minTemp);
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                String unitType = sharedPreferences.getString(getString(R.string.pref_units_key), getString(R.string.pref_units_default));
+
+
+                dailyForecastsInPeriod[i] = day + " - " + description + " " + formatHighLows(maxTemp, minTemp, unitType);
 
             }
 
@@ -255,9 +260,21 @@ public class ForecastFragment extends Fragment {
 
         }
 
+        private String formatHighLows(double maxTemp, double minTemp, String unitType) {
+
+            if (unitType.equals(getString(R.string.pref_units_imperial))) {
+                maxTemp = (maxTemp * 1.8) + 32;
+                minTemp = (minTemp * 1.8) + 32;
+            } else if (!unitType.equals(getString(R.string.pref_units_metric))){
+                Log.d(LOG_TAG, "Unit type not found: " + unitType);
+            }
+
+            return Math.round(maxTemp) + "/" + Math.round(minTemp);
+        }
+
         private String getReadableDateString(long dateTime) {
             Date date = new Date(dateTime * 1000);
-            SimpleDateFormat format = new SimpleDateFormat("EEE MMM dd");
+            SimpleDateFormat format = new SimpleDateFormat("EEE MMM dd", Locale.US);
             format.setTimeZone(TimeZone.getDefault());
 
             return format.format(date);
