@@ -1,9 +1,11 @@
 package com.example.android.sunshine.app;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,7 +17,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -55,10 +56,23 @@ public class ForecastFragment extends Fragment {
 
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
-            new FetchWeatherTask().execute();
+            updateWeather();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateWeather() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String locationPreferences = preferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
+        Log.d("location", "locationPreferences:  " + locationPreferences);
+        new FetchWeatherTask().execute(locationPreferences);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateWeather();
     }
 
     @Override
@@ -66,18 +80,10 @@ public class ForecastFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        ArrayList<String> forecastArrayList = new ArrayList<>();
-        forecastArrayList.add("Mon 31/10 - Sunny 29º/16º");
-        forecastArrayList.add("Tue 1/11 - Stormy 30º/18º");
-        forecastArrayList.add("Wed 2/11 - Stormy 32º/19º ");
-        forecastArrayList.add("Thu 3/11 - Cloudy 30º/21º");
-        forecastArrayList.add("Fri 4/11 - Cloudy 24º/10º ");
-
         mForecastAdapter = new ArrayAdapter<String>(
                 getActivity(),
                 R.layout.list_item_forecast,
-                R.id.list_item_forecast_textview,
-                forecastArrayList);
+                R.id.list_item_forecast_textview, new ArrayList<String>());
 
         ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
         listView.setAdapter(mForecastAdapter);
@@ -91,8 +97,6 @@ public class ForecastFragment extends Fragment {
                 startActivity(intent);
             }
         });
-
-        new FetchWeatherTask().execute("Campinas");
 
         return rootView;
 
