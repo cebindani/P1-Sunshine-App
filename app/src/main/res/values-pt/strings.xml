@@ -11,4 +11,5 @@
     <string name="action_refresh">Atualizar</string>
     <string name="action_settings">Configurações</string>
     <string name="action_map">Abrir no mapa</string>
+    <string name="action_share">Compartilhar</string>
 </resources>
